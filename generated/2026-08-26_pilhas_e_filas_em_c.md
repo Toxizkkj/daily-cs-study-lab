@@ -1,211 +1,164 @@
-# 📚 Estrutura de Dados em C [Semana 1]: Pilhas e Filas em C
+# Pilhas e Filas em C
 
-**Disciplina:** Estrutura de Dados I  
-**Docente:** Prof. Dr. [Nome do Professor]  
-**Curso:** Bacharelado em Sistemas de Informação (3º Período) — Universidade Federal  
+## 1. Teoria e Complexidade
 
----
+Uma **Pilha (Stack)** é uma estrutura de dados linear do tipo **LIFO** (*Last-In, First-Out*), onde o último elemento inserido é o primeiro a ser removido. Todas as operações de inserção (`push`) e remoção (`pop`) ocorrem na mesma extremidade, chamada de **topo**.
 
-## 🎯 1. Fundamentacao Teorica & Intuicao
+Uma **Fila (Queue)** é uma estrutura linear do tipo **FIFO** (*First-In, First-Out*), onde o primeiro elemento inserido é o primeiro a ser removido. Inserções (`enqueue`) ocorrem no **fim** (*rear*) e remoções (`dequeue`) ocorrem no **início** (*front*). A alocação dinâmica com `struct` e ponteiros permite que ambas cresçam e encolham sob demanda sem desperdício de memória.
 
-Sejam bem-vindos à nossa aula. Hoje estudaremos duas das estruturas de dados lineares mais fundamentais da Ciência da Computação: **Pilhas (Stacks)** e **Filas (Queues)**.
-
-A diferença crucial entre elas não reside na forma como os dados são armazenados na memória física, mas sim na **política de acesso e remoção** dos elementos.
-
-```
-       PILHA (LIFO)                     FILA (FIFO)
-  Last-In, First-Out               First-In, First-Out
-
-     |  Elemento C  | Topo            Início                   Fim
-     |--------------|               +---+   +---+   +---+   +---+
-     |  Elemento B  |               | A |-->| B |-->| C |-->| D |
-     |--------------|               +---+   +---+   +---+   +---+
-     |  Elemento A  | Base          [Sai]                   [Entra]
-     +--------------+
-```
-
-### 1.1. Pilhas (LIFO - *Last-In, First-Out*)
-O último elemento a entrar é obrigatoriamente o primeiro a sair.
-* **Inserção (Push):** Adiciona um elemento no **topo**.
-* **Remoção (Pop):** Remove o elemento do **topo**.
-* **Estática vs. Dinâmica:**
-  * *Estática (Vetores):* Tamanho fixo ($N$). Risco de **Overflow** (pilha cheia ao tentar dar `push`).
-  * *Dinâmica (Ponteiros/Lista Encadeada):* Cresce conforme a memória RAM disponível (*Heap*). Sem risco de overflow físico até que a memória do sistema se esgote.
-  * *Underflow:* Ocorre em ambas ao tentar dar `pop` em uma pilha vazia.
-
-### 1.2. Filas (FIFO - *First-In, First-Out*)
-O primeiro elemento a entrar é obrigatoriamente o primeiro a sair.
-* **Inserção (Enqueue):** Adiciona no **fim** (*rear/tail*).
-* **Remoção (Dequeue):** Remove do **início** (*front/head*).
-* **Fila Circular Estática:** Para evitar o deslocamento constante de elementos ($O(N)$) em vetores, utilizamos aritmética modular (`(fim + 1) % CAPACIDADE`) para reutilizar posições liberadas no início do vetor.
-* **Fila Dinâmica:** Mantém dois ponteiros principais: `inicio` e `fim`.
-
-### 1.3. Análise de Complexidade Assintótica (Big-O)
-
-| Operação | Pilha Estática | Pilha Dinâmica | Fila Estática (Circular) | Fila Dinâmica |
-| :--- | :---: | :---: | :---: | :---: |
-| **Push / Enqueue** | $O(1)$ | $O(1)$ | $O(1)$ | $O(1)$ |
-| **Pop / Dequeue** | $O(1)$ | $O(1)$ | $O(1)$ | $O(1)$ |
-| **Consulta (Peek)**| $O(1)$ | $O(1)$ | $O(1)$ | $O(1)$ |
-| **Busca (Search)** | $O(N)$ | $O(N)$ | $O(N)$ | $O(N)$ |
-| **Espaço (Space)** | $O(N)$ fixo | $O(N)$ proporcional | $O(N)$ fixo | $O(N)$ proporcional |
-
-*Nota acadêmica:* O consumo de memória na abordagem dinâmica tem um *overhead* extra devido ao ponteiro de encadeamento (`sizeof(Node*)` bytes por nó).
-
-### 1.4. Aplicações Práticas em Engenharia de Software
-* **Pilhas:**
-  * Gerenciamento de pilha de chamadas de funções (*Call Stack*) da JVM, GCC e execução de código recursivo.
-  * Algoritmos de *Undo/Redo* (Ctrl+Z) em editores de texto.
-  * AVALIAÇÃO DE EXPRESSÕES MATEMÁTICAS (conversão da notação Infixa para Pós-fixa / Polonesa Reversa).
-  * Algoritmos de navegação em Grafos (DFS - *Depth-First Search*).
-* **Filas:**
-  * Escalonador de processos do Sistema Operacional (Round-Robin, filas de pronto CPU).
-  * Buffers de E/S (Sockets de rede, drivers de teclado, streaming de áudio/vídeo).
-  * Spool de impressão (Queue de documentos aguardando a impressora).
-  * Algoritmos de navegação em Grafos (BFS - *Breadth-First Search*).
+| Operação | Pilha (Push/Pop) | Fila (Enqueue/Dequeue) | Espaço (Ambas) |
+| :--- | :--- | :--- | :--- |
+| **Inserção** | O(1) | O(1) | O(n) |
+| **Remoção** | O(1) | O(1) | O(n) |
+| **Busca** | O(n) | O(n) | O(n) |
 
 ---
 
-## 💻 2. Implementacao Completa em C (Compilavel)
-
-Abaixo está a implementação robusta de uma **Pilha Dinâmica** e de uma **Fila Dinâmica** em um único arquivo C compilável. O código atende a todos os critérios de produção e boas práticas exigidos em avaliações acadêmicas.
+## 2. Implementacao Completa em C
 
 ```c
-/**
- * @file estruturas_lineares.c
- * @brief Implementacao robusta de Pilha e Fila Dinamicas em C.
- * @author Prof. Dr. Estrutura de Dados
- */
-
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 
-/* ========================================================================== */
-/*                         ESTRUTURA DA PILHA DINÂMICA                        */
-/* ========================================================================== */
-
-typedef struct NodePilha {
-    int dado;
-    struct NodePilha* proximo;
-} NodePilha;
+typedef struct Node {
+    int data;
+    struct Node *next;
+} Node;
 
 typedef struct {
-    NodePilha* topo;
-    size_t tamanho;
-} Pilha;
-
-/**
- * @brief Inicializa a estrutura da Pilha.
- */
-Pilha* criar_pilha(void) {
-    Pilha* p = (Pilha*) malloc(sizeof(Pilha));
-    if (p == NULL) {
-        fprintf(stderr, "Erro critico: Falha de alocacao de memoria para a Pilha!\n");
-        exit(EXIT_FAILURE);
-    }
-    p->topo = NULL;
-    p->tamanho = 0;
-    return p;
-}
-
-/**
- * @brief Verifica se a pilha esta vazia.
- */
-bool pilha_vazia(const Pilha* p) {
-    return (p == NULL || p->topo == NULL);
-}
-
-/**
- * @brief Insere um elemento no topo da pilha (Push).
- */
-bool push(Pilha* p, int valor) {
-    if (p == NULL) return false;
-
-    NodePilha* novo = (NodePilha*) malloc(sizeof(NodePilha));
-    if (novo == NULL) {
-        fprintf(stderr, "Erro: Falha ao alocar memoria para novo no da Pilha.\n");
-        return false; // Trata estouro de memoria da Heap
-    }
-
-    novo->dado = valor;
-    novo->proximo = p->topo;
-    p->topo = novo;
-    p->tamanho++;
-    return true;
-}
-
-/**
- * @brief Remove e retorna o elemento do topo da pilha (Pop).
- */
-bool pop(Pilha* p, int* valor_out) {
-    if (pilha_vazia(p)) {
-        fprintf(stderr, "Alerta [Underflow]: Tentativa de Pop em pilha vazia!\n");
-        return false;
-    }
-
-    NodePilha* temp = p->topo;
-    *valor_out = temp->dado;
-    p->topo = temp->proximo;
-    
-    free(temp); // Libera o nó desalocado
-    temp = NULL; // Previne dangling pointer local
-
-    p->tamanho--;
-    return true;
-}
-
-/**
- * @brief Destroi a pilha e libera toda a memoria alocada.
- */
-void destruir_pilha(Pilha** p) {
-    if (p == NULL || *p == NULL) return;
-
-    NodePilha* atual = (*p)->topo;
-    while (atual != NULL) {
-        NodePilha* aux = atual->proximo;
-        free(atual);
-        atual = aux;
-    }
-
-    free(*p);
-    *p = NULL; // Evita ponteiro pendente no escopo do chamador
-    printf("Memoria da Pilha liberada com sucesso.\n");
-}
-
-
-/* ========================================================================== */
-/*                         ESTRUTURA DA FILA DINÂMICA                         */
-/* ========================================================================== */
-
-typedef struct NodeFila {
-    int dado;
-    struct NodeFila* proximo;
-} NodeFila;
+    Node *top;
+} Stack;
 
 typedef struct {
-    NodeFila* inicio;
-    NodeFila* fim;
-    size_t tamanho;
-} Fila;
+    Node *front;
+    Node *rear;
+} Queue;
 
-/**
- * @brief Inicializa a Fila.
- */
-Fila* criar_fila(void) {
-    Fila* f = (Fila*) malloc(sizeof(Fila));
-    if (f == NULL) {
-        fprintf(stderr, "Erro critico: Falha de alocacao para a Fila!\n");
-        exit(EXIT_FAILURE);
-    }
-    f->inicio = NULL;
-    f->fim = NULL;
-    f->tamanho = 0;
-    return f;
+// --- OPERAÇÕES DE PILHA ---
+Stack* create_stack() {
+    Stack *s = (Stack*) malloc(sizeof(Stack));
+    s->top = NULL;
+    return s;
 }
 
-/**
- * @brief Verifica se a fila esta vazia.
- */
-bool fila_vazia(const Fila* f) {
-    return (f == NULL
+void push(Stack *s, int val) {
+    Node *new_node = (Node*) malloc(sizeof(Node));
+    if (!new_node) return;
+    new_node->data = val;
+    new_node->next = s->top;
+    s->top = new_node;
+}
+
+int pop(Stack *s) {
+    if (s->top == NULL) {
+        printf("Underflow na Pilha!\n");
+        return -1;
+    }
+    Node *temp = s->top;
+    int val = temp->data;
+    s->top = s->top->next;
+    free(temp);
+    return val;
+}
+
+void free_stack(Stack *s) {
+    Node *curr = s->top;
+    while (curr != NULL) {
+        Node *temp = curr;
+        curr = curr->next;
+        free(temp);
+    }
+    free(s);
+}
+
+// --- OPERAÇÕES DE FILA ---
+Queue* create_queue() {
+    Queue *q = (Queue*) malloc(sizeof(Queue));
+    q->front = q->rear = NULL;
+    return q;
+}
+
+void enqueue(Queue *q, int val) {
+    Node *new_node = (Node*) malloc(sizeof(Node));
+    if (!new_node) return;
+    new_node->data = val;
+    new_node->next = NULL;
+    if (q->rear == NULL) {
+        q->front = q->rear = new_node;
+        return;
+    }
+    q->rear->next = new_node;
+    q->rear = new_node;
+}
+
+int dequeue(Queue *q) {
+    if (q->front == NULL) {
+        printf("Underflow na Fila!\n");
+        return -1;
+    }
+    Node *temp = q->front;
+    int val = temp->data;
+    q->front = q->front->next;
+    if (q->front == NULL) {
+        q->rear = NULL;
+    }
+    free(temp);
+    return val;
+}
+
+void free_queue(Queue *q) {
+    Node *curr = q->front;
+    while (curr != NULL) {
+        Node *temp = curr;
+        curr = curr->next;
+        free(temp);
+    }
+    free(q);
+}
+
+int main() {
+    Stack *pilha = create_stack();
+    push(pilha, 10);
+    push(pilha, 20);
+    printf("Pop Pilha: %d\n", pop(pilha)); // Imprime 20
+
+    Queue *fila = create_queue();
+    enqueue(fila, 100);
+    enqueue(fila, 200);
+    printf("Dequeue Fila: %d\n", dequeue(fila)); // Imprime 100
+
+    free_stack(pilha);
+    free_queue(fila);
+    return 0;
+}
+```
+
+---
+
+## 3. Pegadinhas de Prova
+
+1. **Uso de Memória Acessada Após `free()` (Dangling Pointer):** Executar `free(temp)` antes de ler `temp->next` resulta em comportamento indefinido (Segfault). Sempre guarde a referência do próximo nó *antes* de desalocar o atual.
+2. **Esquecer de atualizar `rear` no Dequeue da Fila:** Se a fila tiver apenas 1 elemento e ele for removido, `q->front` vira `NULL`, mas se `q->rear` continuar apontando para o nó liberado, o ponteiro fica solto (*dangling pointer*).
+3. **Vazamento de Memória (Memory Leak) na Desalocação:** Liberar a estrutura da Pilha/Fila (`free(s)` ou `free(q)`) sem iterar e dar `free()` em todos os nós dinâmicos criados individualmente com `malloc()`.
+
+---
+
+## 4. Exercicio com Gabarito
+
+**Enunciado:** Escreva uma função em C chamada `int peek(Stack *s)` que retorna o valor do topo da pilha **sem removê-lo**. A função deve verificar se a pilha está vazia (Underflow) e retornar `-1` caso esteja.
+
+**Gabarito:**
+
+```c
+int peek(Stack *s) {
+    // 1. Verificação de ponteiros nulos/Underflow
+    if (s == NULL || s->top == NULL) {
+        printf("Erro: Pilha vazia ou nao inicializada.\n");
+        return -1;
+    }
+    // 2. Retorna o valor sem alterar a estrutura ou remover o no
+    return s->top->data;
+}
+```
+
+*Explicação:* Diferente do `pop()`, o `peek()` apenas inspeciona o valor no ponteiro `s->top`. Nenhum `free()` é chamado e o ponteiro `s->top` permanece inalterado.
