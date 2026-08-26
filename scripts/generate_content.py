@@ -6,53 +6,72 @@ from google import genai
 from google.genai import types
 
 def generate_daily_study():
-    print("Iniciando processo de geracao de conteudo...")
+    print("Iniciando geracao de conteudo alinhado a ementa federal de BSI...")
     
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
         raise ValueError("Chave GEMINI_API_KEY nao configurada.")
 
-    print("Conectando a API do Gemini...")
     client = genai.Client(api_key=api_key)
 
+    # Topicos baseados na ementa padrao do 3º periodo de BSI em Federais
     topics = [
-        "Estrutura de Dados em C: Alocacao Dinamica (malloc, free) e Ponteiros",
-        "Estrutura de Dados em C: Listas Simplesmente Encadeadas",
-        "Estrutura de Dados em C: Pilhas (Stacks) e Filas (Queues)",
-        "Estrutura de Dados em C: Arvores Binarias de Busca (BST)",
-        "Estrutura de Dados em C: Algoritmos de Ordenacao (Quicksort e Mergesort)",
-        "Estatistica Descritiva: Media, Mediana, Desvio Padrao e IQR",
-        "Probabilidade: Distribuicao Normal e Calculo de Z-Score",
-        "Inferencia Estatistica: Teorema do Limite Central e Intervalos de Confianca",
-        "Testes de Hipotese: Teste t de Student e p-valor",
-        "Regressao Linear Simples: Coeficiente de Determinacao (R2) e Residuos"
+        # --- ESTRUTURA DE DADOS EM C (BSI - 3º PERÍODO) ---
+        "Estrutura de Dados em C: Aritmetica de Ponteiros e Passagem por Referencia (* e &)",
+        "Estrutura de Dados em C: Alocacao Dinamica de Vetores e Matrizes com malloc, calloc, realloc e free",
+        "Estrutura de Dados em C: Criacao e Modularizacao de TADs (Tipos Abstratos de Dados em .h e .c)",
+        "Estrutura de Dados em C: Listas Encadeadas Simples (Insercao no Inicio, Fim, Busca e Remocao)",
+        "Estrutura de Dados em C: Listas Duplamente Encadeadas e Listas Circulares",
+        "Estrutura de Dados em C: Pilhas (Stacks) com implementacao encadeada e aplicacao pratica (avaliar expressoes)",
+        "Estrutura de Dados em C: Filas (Queues) com implementacao circular estatica e encadeada",
+        "Estrutura de Dados em C: Arvores Binarias de Busca (BST) - Insercao, Busca e Percursos (Pre, Em e Pos-ordem)",
+        "Estrutura de Dados em C: Metodos de Ordenacao Elementares vs Eficientes (Bubble, Insertion, QuickSort)",
+        "Estrutura de Dados em C: Analise de Complexidade Assintotica (Notacao Big-O, O(1), O(n), O(n log n))",
+
+        # --- FUNDAMENTOS DE ESTATISTICA E PROBABILIDADE (BSI - 3º PERÍODO) ---
+        "Estatistica Descritiva: Medidas de Tendencia Central (Media, Mediana, Moda) e Sensibilidade a Outliers",
+        "Estatistica Descritiva: Medidas de Dispersao (Variancia Amostral vs Populacional, Desvio Padrao e CV%)",
+        "Estatistica Descritiva: Analise Exploratoria com Boxplot, Quartis e Deteccao de Outliers por IQR",
+        "Probabilidade: Regra da Soma, do Produto e Probabilidade Condicional com Teorema de Bayes",
+        "Variaveis Aleatorias Discretas: Distribuicao Binomial aplicada a falhas de transmissao/sistemas",
+        "Variaveis Aleatorias Discretas: Distribuicao de Poisson aplicada a chegada de requisicoes/filas",
+        "Variaveis Aleatorias Continuas: Distribuicao Normal, Padronizacao Z e Calculo de Probabilidades",
+        "Amostragem e Inferencia: Teorema do Limite Central e Distribuicao das Medias Amostrais",
+        "Inferencia Estatistica: Intervalo de Confianca para a Media com Desvio Padrao Conhecido e Desconhecido (t-Student)",
+        "Testes de Hipotese: Formulacao de H0 e H1, Nivel de Significancia (alpha), Erros Tipo I/II e p-valor"
     ]
     
     selected_topic = random.choice(topics)
-    print(f"Topico selecionado: {selected_topic}")
+    print(f"Topico sorteado: {selected_topic}")
 
     prompt = f"""
-    Voce e um professor universitario de Ciencia da Computacao e Estatistica.
-    Crie uma licao de estudo concisa e didatica sobre: {selected_topic}.
+    Voce e um professor titular de Ciencia da Computacao e Estatistica em uma Universidade Federal, lecionando para o 3º periodo de Sistemas de Informacao.
+    Crie uma licao de estudo aprofundada, didatica, tecnica e completa sobre: {selected_topic}.
 
-    Siga esta estrutura Markdown:
-    # 📚 Licao do Dia: {selected_topic}
+    Siga rigorosamente este formato Markdown:
+    # 📚 Licao de BSI: {selected_topic}
     
-    ## 🎯 1. Conceito Central
-    Explicacao direta ao ponto (maximo 2 paragrafos).
+    ## 🎯 1. Fundamentacao Teorica e Intuicao
+    - Explicacao clara do conceito focada em Sistemas de Informacao e Computacao.
+    - Por que este topico cai em provas e onde ele e aplicado na engenharia de software / ciencia de dados.
     
-    ## 💻 2. Codigo Exemplo
-    - Se C: codigo enxuto, comentado, com liberacao de memoria (free).
-    - Se Estatistica: script breve em Python (numpy/scipy).
+    ## 💻 2. Implementacao Pratica Completa
+    - SE FOR ESTRUTURA DE DADOS EM C:
+      * Codigo em C modular, legivel e moderno.
+      * Demonstre explicitamente o gerenciamento de memoria: checagem de ponteiro nulo (NULL check) e 'free()' ao final.
+      * Inclua a funcao main() pronta para compilacao via gcc sem erros.
+    - SE FOR ESTATISTICA:
+      * Formulas matematicas detalhadas.
+      * Script em Python utilizando numpy, scipy ou pandas para resolver um exemplo computacional com dados simulados.
     
-    ## ⚠️ 3. Pegadinha Comum
-    O principal erro em provas sobre isso.
+    ## ⚠️ 3. Pegadinhas Classicas de Provas da Federal
+    - Quais sao os erros conceituais ou de sintaxe que mais reprovam alunos nesse topico (ex: vazamento de memoria por perder ponteiro de cabeca, divisao por zero em variancia n-1, interpretacao errada do p-valor).
     
-    ## 🧠 4. Mini-Desafio
-    Uma questao rapida de fixacao.
+    ## 🧠 4. Exercicio Pratico de Fixacao com Gabarito
+    - Enunciado de um exercicio no estilo de prova universitaria.
+    - Solucao comentada e gabarito logo abaixo com explicacao passo a passo.
     """
 
-    # Modelos compativeis com sua chave de API
     models_to_try = ["gemini-3.6-flash", "gemini-3.1-pro-preview"]
     response = None
 
@@ -64,7 +83,7 @@ def generate_daily_study():
                     model=model_name,
                     contents=prompt,
                     config=types.GenerateContentConfig(
-                        max_output_tokens=1500,
+                        max_output_tokens=4000,
                         temperature=0.7
                     )
                 )
@@ -81,7 +100,7 @@ def generate_daily_study():
     if not response or not response.text:
         raise RuntimeError("Falha ao gerar conteudo com todos os modelos disponiveis.")
 
-    print("Salvando arquivo...")
+    print("Salvando arquivo Markdown...")
     os.makedirs("generated", exist_ok=True)
     today = datetime.now().strftime("%Y-%m-%d")
     clean_topic_name = selected_topic.split(':')[0].replace(' ', '_').lower()
@@ -94,4 +113,3 @@ def generate_daily_study():
 
 if __name__ == "__main__":
     generate_daily_study()
-    
