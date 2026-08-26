@@ -10,7 +10,6 @@ def generate_daily_study():
 
     client = genai.Client(api_key=api_key)
 
-    # Alterna os tópicos para você ter variedade de conteúdo todo dia
     topics = [
         "Estrutura de Dados em C: Alocação Dinâmica e Gerenciamento de Memória (malloc, free, realloc)",
         "Estrutura de Dados em C: Listas Simplesmente e Duplamente Encadeadas com manipulação de ponteiros",
