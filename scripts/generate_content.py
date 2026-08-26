@@ -52,30 +52,34 @@ def generate_daily_study():
     Uma questao rapida de fixacao.
     """
 
-    # Modelos em ordem de preferencia
-    models_to_try = ["gemini-2.5-flash", "gemini-2.5-pro"]
+    # Modelos compativeis com sua chave de API
+    models_to_try = ["gemini-3.6-flash", "gemini-3.1-pro-preview"]
     response = None
 
     for model_name in models_to_try:
-        try:
-            print(f"Tentando gerar com o modelo: {model_name}...")
-            response = client.models.generate_content(
-                model=model_name,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    max_output_tokens=1500,
-                    temperature=0.7
+        for attempt in range(3):
+            try:
+                print(f"Tentando {model_name} (tentativa {attempt + 1}/3)...")
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        max_output_tokens=1500,
+                        temperature=0.7
+                    )
                 )
-            )
-            if response and response.text:
-                print(f"Sucesso com o modelo: {model_name}!")
-                break
-        except Exception as e:
-            print(f"Falha com {model_name}: {e}. Tentando proximo modelo...")
-            time.sleep(2)
+                if response and response.text:
+                    print(f"Sucesso com o modelo: {model_name}!")
+                    break
+            except Exception as e:
+                print(f"Aviso [{model_name}]: {e}")
+                time.sleep(3)
+        
+        if response and response.text:
+            break
 
     if not response or not response.text:
-        raise RuntimeError("Nao foi possivel gerar conteudo com nenhum dos modelos disponiveis.")
+        raise RuntimeError("Falha ao gerar conteudo com todos os modelos disponiveis.")
 
     print("Salvando arquivo...")
     os.makedirs("generated", exist_ok=True)
@@ -90,3 +94,4 @@ def generate_daily_study():
 
 if __name__ == "__main__":
     generate_daily_study()
+    
