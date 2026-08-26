@@ -1,12 +1,40 @@
 import os
 import random
 import time
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from google import genai
 from google.genai import types
 
+def get_current_ed_topic():
+    # Cronograma estruturado por semanas (Segunda a Domingo)
+    # Semana 1 iniciada na Segunda-feira, 24 de Agosto de 2026
+    start_date = date(2026, 8, 24)
+    today = date.today()
+    
+    # Calcula quantas semanas completas se passaram desde o início
+    days_diff = (today - start_date).days
+    week_index = max(0, days_diff // 7)
+
+    schedule = [
+        "Pilhas e Filas em C (implementacao estatica, circular e encadeada, operacoes push, pop, enqueue, dequeue e analise de vazamento)",
+        "Arvores Binarias em C (estruturacao de nos, percursos em Pre-ordem, Em-ordem e Pos-ordem com recursao e desalocacao)",
+        "Arvores Binarias de Busca (BST) em C (insercao, busca binaria, remocao com 0, 1 e 2 filhos e complexidade O(h))",
+        "Arvores AVL em C (fator de balanceamento, rotacoes simples e duplas a esquerda e direita, mantendo O(log n))",
+        "Introducao a Grafos em C (Matriz de Adjacencia vs Lista de Adjacencia, busca em largura BFS e busca em profundidade DFS)",
+        "Arvores B em C (conceito de ordem m, divisao de nos split, busca e insercao eficiente)",
+        "Tabelas Hash em Memoria em C (funcoes hash, tratamento de colisoes por encadeamento separado e enderecamento aberto)",
+        "Tabelas Hash em Disco e Indexacao em C (acesso a arquivos binarios, hashing extensivel e reducao de I/O em disco)"
+    ]
+
+    # Se passar das 8 semanas, faz um ciclo das estruturas mais importantes
+    if week_index < len(schedule):
+        return schedule[week_index], f"Semana {week_index + 1}"
+    else:
+        chosen = random.choice(schedule)
+        return chosen, "Revisao Avancada de ED"
+
 def generate_daily_study():
-    print("Iniciando geracao de conteudo alinhado a ementa federal de BSI...")
+    print("Iniciando processo de geracao de conteudo...")
     
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
@@ -14,62 +42,65 @@ def generate_daily_study():
 
     client = genai.Client(api_key=api_key)
 
-    # Topicos baseados na ementa padrao do 3º periodo de BSI em Federais
-    topics = [
-        # --- ESTRUTURA DE DADOS EM C (BSI - 3º PERÍODO) ---
-        "Estrutura de Dados em C: Aritmetica de Ponteiros e Passagem por Referencia (* e &)",
-        "Estrutura de Dados em C: Alocacao Dinamica de Vetores e Matrizes com malloc, calloc, realloc e free",
-        "Estrutura de Dados em C: Criacao e Modularizacao de TADs (Tipos Abstratos de Dados em .h e .c)",
-        "Estrutura de Dados em C: Listas Encadeadas Simples (Insercao no Inicio, Fim, Busca e Remocao)",
-        "Estrutura de Dados em C: Listas Duplamente Encadeadas e Listas Circulares",
-        "Estrutura de Dados em C: Pilhas (Stacks) com implementacao encadeada e aplicacao pratica (avaliar expressoes)",
-        "Estrutura de Dados em C: Filas (Queues) com implementacao circular estatica e encadeada",
-        "Estrutura de Dados em C: Arvores Binarias de Busca (BST) - Insercao, Busca e Percursos (Pre, Em e Pos-ordem)",
-        "Estrutura de Dados em C: Metodos de Ordenacao Elementares vs Eficientes (Bubble, Insertion, QuickSort)",
-        "Estrutura de Dados em C: Analise de Complexidade Assintotica (Notacao Big-O, O(1), O(n), O(n log n))",
+    # Verifica se o usuario passou um topico manual via GitHub Actions
+    override = os.environ.get("OVERRIDE_TOPIC", "").strip()
 
-        # --- FUNDAMENTOS DE ESTATISTICA E PROBABILIDADE (BSI - 3º PERÍODO) ---
-        "Estatistica Descritiva: Medidas de Tendencia Central (Media, Mediana, Moda) e Sensibilidade a Outliers",
-        "Estatistica Descritiva: Medidas de Dispersao (Variancia Amostral vs Populacional, Desvio Padrao e CV%)",
-        "Estatistica Descritiva: Analise Exploratoria com Boxplot, Quartis e Deteccao de Outliers por IQR",
-        "Probabilidade: Regra da Soma, do Produto e Probabilidade Condicional com Teorema de Bayes",
-        "Variaveis Aleatorias Discretas: Distribuicao Binomial aplicada a falhas de transmissao/sistemas",
-        "Variaveis Aleatorias Discretas: Distribuicao de Poisson aplicada a chegada de requisicoes/filas",
-        "Variaveis Aleatorias Continuas: Distribuicao Normal, Padronizacao Z e Calculo de Probabilidades",
-        "Amostragem e Inferencia: Teorema do Limite Central e Distribuicao das Medias Amostrais",
-        "Inferencia Estatistica: Intervalo de Confianca para a Media com Desvio Padrao Conhecido e Desconhecido (t-Student)",
-        "Testes de Hipotese: Formulacao de H0 e H1, Nivel de Significancia (alpha), Erros Tipo I/II e p-valor"
+    stat_topics = [
+        "Estatistica Descritiva: Medidas de Posicao (Media, Mediana, Moda) e Sensibilidade a Outliers",
+        "Estatistica Descritiva: Medidas de Dispersao (Variancia Amostral n-1, Desvio Padrao e Coeficiente de Variacao)",
+        "Analise Exploratoria: Boxplot, Calculo de Quartis e Deteccao de Outliers por IQR",
+        "Probabilidade: Regra da Soma, Produto e Probabilidade Condicional com Teorema de Bayes",
+        "Variaveis Aleatorias Discretas: Distribuicao Binomial aplicada a falhas e testes de sistemas",
+        "Variaveis Aleatorias Discretas: Distribuicao de Poisson para modelagem de requisicoes por segundo",
+        "Variaveis Aleatorias Continuas: Distribuicao Normal e Padronizacao Z-score",
+        "Inferencia Estatistica: Teorema do Limite Central e Distribuicao Amostral da Media",
+        "Inferencia Estatistica: Intervalos de Confianca para a Media (t-Student vs Z)",
+        "Testes de Hipotese: Formulacao de H0 e H1, Nivel de Significancia alpha, p-valor e Erros Tipo I/II"
     ]
+
+    today = date.today()
     
-    selected_topic = random.choice(topics)
-    print(f"Topico sorteado: {selected_topic}")
+    if override:
+        selected_topic = f"Foco Especial: {override}"
+        module_name = "Modulo Personalizado"
+    else:
+        # Alterna entre o tema de ED da semana e Estatistica com base no dia do mes
+        ed_topic, week_label = get_current_ed_topic()
+        if today.day % 2 == 1:
+            selected_topic = f"Estrutura de Dados em C [{week_label}]: {ed_topic}"
+            module_name = "Estrutura de Dados em C"
+        else:
+            chosen_stat = random.choice(stat_topics)
+            selected_topic = f"Fundamentos de Estatistica: {chosen_stat}"
+            module_name = "Fundamentos de Estatistica"
+
+    print(f"Topico de hoje: {selected_topic}")
 
     prompt = f"""
-    Voce e um professor titular de Ciencia da Computacao e Estatistica em uma Universidade Federal, lecionando para o 3º periodo de Sistemas de Informacao.
-    Crie uma licao de estudo aprofundada, didatica, tecnica e completa sobre: {selected_topic}.
+    Voce e um professor universitario de Ciencia da Computacao e Estatistica em uma Universidade Federal (BSI - 3º Periodo).
+    Crie uma aula/licao completa, altamente didatica e aprofundada sobre o tema: {selected_topic}.
 
-    Siga rigorosamente este formato Markdown:
+    Siga rigorosamente esta estrutura Markdown:
     # 📚 Licao de BSI: {selected_topic}
     
-    ## 🎯 1. Fundamentacao Teorica e Intuicao
-    - Explicacao clara do conceito focada em Sistemas de Informacao e Computacao.
-    - Por que este topico cai em provas e onde ele e aplicado na engenharia de software / ciencia de dados.
+    ## 🎯 1. Fundamentacao Teorica & Intuicao
+    - Explicacao direta ao ponto focada em Sistemas de Informacao / Computacao.
+    - Por que este conceito e fundamental e onde ele e cobrado em provas/entrevistas.
     
     ## 💻 2. Implementacao Pratica Completa
     - SE FOR ESTRUTURA DE DADOS EM C:
-      * Codigo em C modular, legivel e moderno.
-      * Demonstre explicitamente o gerenciamento de memoria: checagem de ponteiro nulo (NULL check) e 'free()' ao final.
-      * Inclua a funcao main() pronta para compilacao via gcc sem erros.
+      * Codigo em C modular, compilavel e bem documentado.
+      * Mostre o gerenciamento de memoria explicito (malloc, free, checagem de NULL) e a funcao main().
     - SE FOR ESTATISTICA:
-      * Formulas matematicas detalhadas.
-      * Script em Python utilizando numpy, scipy ou pandas para resolver um exemplo computacional com dados simulados.
+      * Formulas matematicas explicadas passo a passo.
+      * Script executavel em Python (numpy/scipy) com dados simulados.
     
     ## ⚠️ 3. Pegadinhas Classicas de Provas da Federal
-    - Quais sao os erros conceituais ou de sintaxe que mais reprovam alunos nesse topico (ex: vazamento de memoria por perder ponteiro de cabeca, divisao por zero em variancia n-1, interpretacao errada do p-valor).
+    - Erros mais comuns cometidos por alunos que geram perda de pontos ou falhas criticas (ex: segfault, vazamento de nos, distorcao de metricas estatisticas).
     
-    ## 🧠 4. Exercicio Pratico de Fixacao com Gabarito
-    - Enunciado de um exercicio no estilo de prova universitaria.
-    - Solucao comentada e gabarito logo abaixo com explicacao passo a passo.
+    ## 🧠 4. Exercicio de Fixacao com Gabarito
+    - Enunciado no estilo de prova universitaria.
+    - Solucao comentada passo a passo logo em seguida.
     """
 
     models_to_try = ["gemini-3.6-flash", "gemini-3.1-pro-preview"]
@@ -100,11 +131,10 @@ def generate_daily_study():
     if not response or not response.text:
         raise RuntimeError("Falha ao gerar conteudo com todos os modelos disponiveis.")
 
-    print("Salvando arquivo Markdown...")
     os.makedirs("generated", exist_ok=True)
-    today = datetime.now().strftime("%Y-%m-%d")
-    clean_topic_name = selected_topic.split(':')[0].replace(' ', '_').lower()
-    filename = f"generated/{today}_{clean_topic_name}.md"
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    clean_name = module_name.replace(' ', '_').lower()
+    filename = f"generated/{today_str}_{clean_name}.md"
 
     with open(filename, "w", encoding="utf-8") as f:
         f.write(response.text)
