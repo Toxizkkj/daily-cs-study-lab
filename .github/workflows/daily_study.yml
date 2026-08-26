@@ -2,9 +2,14 @@ name: Daily Study Generator
 
 on:
   schedule:
-    # Roda todos os dias às 09:00 UTC (06:00 no horário de Brasília)
+    # Roda todos os dias às 09:00 UTC (06:00 horário de Brasília)
     - cron: '0 9 * * *'
-  workflow_dispatch: # Permite que você execute na hora clicando em um botão
+  workflow_dispatch:
+    inputs:
+      override_topic:
+        description: 'Substituir foco manualmente (ex: arvore_avl, grafos, etc.) ou deixe vazio para seguir o cronograma'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -29,6 +34,7 @@ jobs:
       - name: Gerar lição do dia com Gemini
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OVERRIDE_TOPIC: ${{ github.event.inputs.override_topic }}
         run: python scripts/generate_content.py
 
       - name: Fazer commit e enviar para o GitHub
