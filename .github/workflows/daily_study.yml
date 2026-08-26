@@ -1,0 +1,44 @@
+name: Daily Study Generator
+
+on:
+  schedule:
+    # Roda todos os dias às 09:00 UTC (06:00 no horário de Brasília)
+    - cron: '0 9 * * *'
+  workflow_dispatch: # Permite que você execute na hora clicando em um botão
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependências
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Gerar lição do dia com Gemini
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python scripts/generate_content.py
+
+      - name: Fazer commit e enviar para o GitHub
+        run: |
+          git config --global user.name "Gemini Study Bot"
+          git config --global user.email "bot@github.actions"
+          git add generated/
+          if git diff --staged --quiet; then
+            echo "Nenhuma lição nova para comitar."
+          else
+            git commit -m "docs(study): nova lição diária gerada por IA [skip ci]"
+            git push
+          fi
